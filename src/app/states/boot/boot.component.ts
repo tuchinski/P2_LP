@@ -25,7 +25,7 @@ export class BootComponent extends Phaser.State {
     this.game.time.events.add(
       2000,
       () => {
-        this.game.state.start("Game");
+        this.game.state.start("Game",true,false,{x:148, y:544});
       },
       this
     );

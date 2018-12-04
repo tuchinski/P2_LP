@@ -10,6 +10,6 @@ import { PathLocationStrategy } from "@angular/common";
 
 export class Player extends Phaser.Sprite{
     constructor(game, x, y, img){
-        super()
+        super(game,x,y,img)
     }
 }

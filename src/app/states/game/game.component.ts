@@ -2,17 +2,23 @@ import { Component, OnInit } from "@angular/core";
 import * as Phaser from "phaser-ce/build/custom/phaser-split";
 import { PathLocationStrategy } from "@angular/common";
 
+var temp;
+
 @Component({
 	selector: "app-game",
 	templateUrl: "./game.component.html",
 	styleUrls: ["./game.component.scss"]
 })
+
 export class GameComponent extends Phaser.State {
 	game: Phaser.Game;
 	bmdSprite: Phaser.Sprite;
-	manager: Phaser.StateManager;
+	manager: any;
 
-	it:number = 1;
+	a1:any;
+	inimigos:any;
+
+	it: number = 1;
 	platforms: any;
 	map: any;
 	layer: any;
@@ -20,6 +26,10 @@ export class GameComponent extends Phaser.State {
 	player: any;
 
 	hud: any;
+
+	playerX:any
+	playerY:any
+
 
 	cursors: any;
 	fireButton: any;
@@ -81,28 +91,37 @@ export class GameComponent extends Phaser.State {
 		this.cursors = this.game.input.keyboard.createCursorKeys();
 
 		this.fireButton = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR)
-		
+
 		this.inventory = this.game.input.keyboard.addKey(Phaser.KeyCode.I)
-		this.inventory.open=0;
+		this.inventory.open = 0;
 		this.inventory.onDown.add(this.openInventory, this)
-		console.log(this.inventory)
+
+
+
 
 		// this.inventory
 
 	}
 
-	openInventory(){
+	openInventory() {
 		console.log("Foi")
-		if(this.inventory.open == 0){
-			this.inventory.open = 1
-			// this.game.pause = true
-			console.log("Fosdasai")
+		// if (this.inventory.open == 0) {
+		// 	this.inventory.open = 1
+		// 	// this.game.pause = true
+		// 	console.log("Fosdasai")
 
-			this.game.paused = true
-		}
+		// 	this.game.paused = true
+		// }
+		// console.log(this.player.x)
+		// console.log(this.player.y)
+		// console.log(this.inimigos)
+		temp = new(this.inimigos['children'])
+		console.log('temp')
+		console.log(temp)
+		this.game.state.start('Fight',true,false,
+		{x:this.player.x,y:this.player.y,inimigos:temp})
 
-		
-		this.inventory.open = 0
+		// this.inventory.open = 0
 	}
 
 	createText(x, y, string, size = 16) {
@@ -116,10 +135,23 @@ export class GameComponent extends Phaser.State {
 		return text
 	}
 
+	init(dict){
+		this.playerX = dict.x
+		this.playerY = dict.y
 
-
+		this.inimigos = dict.inimigos
+		console.log(dict)
+	}
+	
 	create() {
+		console.log("antes")
+		console.log(this.inimigos)
+		
 		this.createTileMap();
+
+		console.log("depois")
+		console.log(this.inimigos)
+
 
 		this.hud = {
 			text1: this.createText(this.game.width * 1 / 9, 50, 'HEALTH: 20'),
@@ -127,32 +159,37 @@ export class GameComponent extends Phaser.State {
 			//fps: createHealthText(game.width*6/9, 50, 'FPS'),
 		}
 
-		
+
 		this.weapon = this.game.add.weapon(1, 'shot')
-		
+
 		this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-		
+
 		//  The speed at which the bullet is fired
 		this.weapon.bulletSpeed = 600;
-		
+
 		//  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
 		this.weapon.fireRate = 100;
 		console.log(this.weapon)
-		
-		this.player = this.game.add.sprite(148, 544, 'phaser')
+
+		this.player = this.game.add.sprite(this.playerX, this.playerY, 'phaser')
 		this.game.physics.arcade.enable(this.player);
 		this.player.body.collideWorldBounds = true;
 		this.player.anchor.setTo(0.5, 0.5)
-		
+
 		// this.player.bullets = this.createBullets()
 		this.weapon.trackSprite(this.player, (this.player.width) / 2, (this.player.height) / 2, true)
-		
+
 		this.game.add.existing(this.player)
 		this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1); // smooth   
 		this.player.health = 5
 		this.player.shield = 0
-		
-		
+
+		this.a1 = new Enemy(this.game,this.playerX,this.playerY,'shot')
+		this.a1.anchor
+		console.log("this.a1")
+		console.log(this.a1)
+
+
 		this.updateHud()
 
 		// //  We're going to be using physics, so enable the Arcade Physics system
@@ -288,6 +325,7 @@ export class GameComponent extends Phaser.State {
 		}
 
 		this.game.physics.arcade.collide(this.player, this.layer);
+		this.game.physics.arcade.collide(this.player, this.inimigos, this.bateNoInimigo,null,this)
 
 		// //  Allow the player to jump if they are touching the ground.
 		// if (
@@ -299,6 +337,19 @@ export class GameComponent extends Phaser.State {
 		// }
 
 		this.updateHud()
+	}
+
+	bateNoInimigo(player,enemy){
+		// console.log('player')
+		// console.log(player)
+		// console.log('enemy')
+		// console.log(enemy)
+		enemy.damage(1)
+		player.damage(0.5)
+		player.x = player.x - 50
+		console.log("inimigos")
+			// console.log(this.inimigos['children'])
+
 	}
 
 	updateHud() {
@@ -330,32 +381,38 @@ export class GameComponent extends Phaser.State {
 		this.map.setCollisionBetween(12, 16, true, 0)
 		this.map.setCollisionBetween(20, 24, true, 0)
 		this.map.setCollisionBetween(28, 32, true, 0)
-		this.map.setTileIndexCallback(2,this.nextLevel,this)
-		this.map.setTileIndexCallback(70,this.catchPotion,this)
-		this.map.setTileIndexCallback(80,this.enemyAhead,this)
-		console.log(this.layer)
-		
+		this.map.setTileIndexCallback(2, this.nextLevel, this)
+		this.map.setTileIndexCallback(70, this.catchPotion, this)
+		this.map.setTileIndexCallback(80, this.enemyAhead, this)
+		// console.log(this.layer)
+
+		if(!this.inimigos){
+			this.inimigos = this.game.add.group()
+			this.map.createFromObjects("Object Layer 1",136, 'shiny_rpg_potions_32x32', 0, true,true,this.inimigos,Enemy)
+			
+		}
+
 		this.layer.debug = true
-		
+
 
 
 		this.layer.resizeWorld()
 
 
 	}
-	nextLevel(){
+	nextLevel() {
 		console.log("passou de nível")
 	}
-	
-	catchPotion(){
-		console.log("passou de nível")		
+
+	catchPotion() {
+		console.log("passou de nível")
 	}
-	
-	enemyAhead(){
-		console.log("inimigo")		
+
+	enemyAhead() {
+		console.log("inimigo")
 	}
-	
-	
+
+
 
 	// createLayer() {
 	//   this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -386,7 +443,71 @@ export class GameComponent extends Phaser.State {
 
 	}
 }
-export class FightComponent extends Phaser.State {
 
+export class Enemy extends Phaser.Sprite {
+	health:any;
+	body:any;
+	anchor:any;
+	constructor(game,x,y,img){
+		super(game,x,y,img)
+		game.physics.arcade.enable(this)
+		console.log('dasdasdas')
+		this.health = 1
+		this.body.immovable = true
+		this.anchor.setTo(0.5,0.5)
+	}
+
+	
+}
+
+
+export class FightComponent extends Phaser.State {
+	game = Phaser.Game;
+	count = 0;
+	tecla: any;
+
+	x:any
+	y:any
+	inimigosMain:any
+
+
+	init(dict){
+		// console.log('init')
+		// console.log(dict.x)
+		// console.log(dict.y)
+		this.x = dict.x
+		this.y = dict.y
+		this.inimigosMain = dict.inimigos
+		console.log("this.inimigosMain")
+		console.log(dict)
+	}
+
+
+
+	preload() {
+		this.game.load.image('fundo', 'assets/mapasNovos/fundo.png')
+		this.game.load.image('shot', 'assets/tiles/shot.png')
+		this.count = 0
+	}
+
+	create() {
+		this.game.add.text(80, 80, "tela da lutinha", { font: '50px Arial', fill: '#ffffff' })
+		this.tecla = this.game.input.keyboard.addKey(Phaser.KeyCode.I)
+		this.tecla.onDown.add(this.volta,this)
+	}
+
+	volta(){
+		this.game.state.start('Game',true,false,
+				{x:this.x,y:this.y,inimigos:this.inimigosMain})
+	}
+
+	update() {
+		if (this.count < 60) {
+			// console.log("coisinha linda")
+		}
+		this.count = this.count + 1
+
+		// if(tecla)
+	}
 
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.1" orientation="orthogonal" renderorder="right-down" width="27" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="6">
+<map version="1.2" tiledversion="1.2.1" orientation="orthogonal" renderorder="right-down" width="27" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="9">
  <tileset firstgid="1" name="tileset" tilewidth="32" tileheight="32" tilecount="56" columns="8">
   <image source="tileset.png" width="256" height="224"/>
  </tileset>
  <tileset firstgid="57" name="fundo" tilewidth="32" tileheight="32" tilecount="8" columns="4">
-  <image source="../../../../trabalho2/phaser3-typescript/assets/boilerplate/fundo.png" width="128" height="64"/>
+  <image source="fundo.png" width="128" height="64"/>
  </tileset>
  <tileset firstgid="65" name="porta" tilewidth="69" tileheight="68" tilecount="1" columns="1">
   <image source="porta.png" width="69" height="68"/>
@@ -17,11 +17,11 @@
 63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,
 63,63,63,63,63,63,23,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,24,63,63,
 63,63,63,63,63,63,15,6,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,6,15,63,63,
-63,63,63,63,63,63,15,17,18,18,18,18,26,80,26,26,18,18,18,18,18,18,18,19,15,63,63,
+63,63,63,63,63,63,15,17,18,18,18,18,26,26,26,26,18,18,18,18,18,18,18,19,15,63,63,
 63,63,63,63,63,63,15,17,18,4,18,19,23,16,16,24,17,18,18,18,18,18,18,19,15,63,63,
 63,63,63,63,63,63,15,17,18,4,18,19,15,63,63,15,17,18,6,4,4,6,18,19,15,63,63,
 63,63,63,63,63,63,15,17,18,4,18,19,15,63,63,15,17,18,6,4,4,6,18,19,15,63,63,
-63,63,63,23,16,16,32,17,18,4,18,19,15,63,63,15,17,18,18,18,18,18,18,70,15,63,63,
+63,63,63,23,16,16,32,17,18,4,18,19,15,63,63,15,17,18,18,18,18,18,18,18,15,63,63,
 63,63,63,15,9,10,10,18,18,18,18,19,15,63,63,15,17,18,18,18,18,18,18,19,15,63,63,
 63,63,63,15,17,18,26,26,26,26,26,6,15,63,63,15,17,18,18,18,18,18,18,19,15,63,63,
 63,63,63,15,18,18,23,16,16,16,16,16,32,63,63,15,6,26,26,18,18,26,26,6,15,63,63,
@@ -36,5 +36,9 @@
 57,57,57,15,1,1,15,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63
 </data>
  </layer>
- <objectgroup id="3" name="Object Layer 1"/>
+ <objectgroup id="3" name="Object Layer 1">
+  <object id="6" name="enemy1" gid="136" x="432" y="109" width="32" height="32"/>
+  <object id="7" name="enemy1" gid="136" x="671" y="117" width="32" height="32"/>
+  <object id="8" name="enemy2" gid="149" x="633" y="287" width="32" height="32"/>
+ </objectgroup>
 </map>
