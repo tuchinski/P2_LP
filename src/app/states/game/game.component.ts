@@ -10,11 +10,13 @@ import { PathLocationStrategy } from "@angular/common";
 export class GameComponent extends Phaser.State {
 	game: Phaser.Game;
 	bmdSprite: Phaser.Sprite;
+	manager: Phaser.StateManager;
 
 	it:number = 1;
 	platforms: any;
 	map: any;
 	layer: any;
+	layer2: any;
 	player: any;
 
 	hud: any;
@@ -74,6 +76,8 @@ export class GameComponent extends Phaser.State {
 		this.game.load.image('tileset', 'assets/mapasNovos/tileset.png')
 		this.game.load.image('fundo', 'assets/mapasNovos/fundo.png')
 		this.game.load.image('porta', 'assets/mapasNovos/porta.png')
+		this.game.load.image('shiny_rpg_potions_32x32', 'assets/tiles/shiny_rpg_potions_32x32.png')
+
 		this.cursors = this.game.input.keyboard.createCursorKeys();
 
 		this.fireButton = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR)
@@ -119,12 +123,12 @@ export class GameComponent extends Phaser.State {
 
 		this.hud = {
 			text1: this.createText(this.game.width * 1 / 9, 50, 'HEALTH: 20'),
-			// text2: this.createText(this.game.width * 8 / 9, 50, 'PLAYER 2: 20')
+			text2: this.createText(this.game.width * 1 / 9, 80, 'SHIELS: 0')
 			//fps: createHealthText(game.width*6/9, 50, 'FPS'),
 		}
 
 		
-		this.weapon = this.game.add.weapon(30, 'shot')
+		this.weapon = this.game.add.weapon(1, 'shot')
 		
 		this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
 		
@@ -133,6 +137,7 @@ export class GameComponent extends Phaser.State {
 		
 		//  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
 		this.weapon.fireRate = 100;
+		console.log(this.weapon)
 		
 		this.player = this.game.add.sprite(148, 544, 'phaser')
 		this.game.physics.arcade.enable(this.player);
@@ -145,6 +150,7 @@ export class GameComponent extends Phaser.State {
 		this.game.add.existing(this.player)
 		this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1); // smooth   
 		this.player.health = 5
+		this.player.shield = 0
 		
 		
 		this.updateHud()
@@ -249,17 +255,17 @@ export class GameComponent extends Phaser.State {
 		if (this.cursors.left.isDown) {
 			//  Move to the left
 			this.player.body.velocity.x = -150;
-			this.player.scale.x = -1
-			this.player.scale.y = -1
-			this.player.angle = 180
+			// this.player.scale.x = -1
+			// this.player.scale.y = -1
+			// this.player.angle = 180
 
 			// this.player.animations.play("left");
 		} else if (this.cursors.right.isDown) {
 			//  Move to the right
 			this.player.body.velocity.x = 150;
-			this.player.scale.x = -1
-			this.player.scale.y = 1
-			this.player.angle = 0
+			// this.player.scale.x = -1
+			// this.player.scale.y = 1
+			// this.player.angle = 0
 
 			// this.player.animations.play("right");
 		}
@@ -297,6 +303,7 @@ export class GameComponent extends Phaser.State {
 
 	updateHud() {
 		this.hud.text1.text = "HEALTH: " + this.player.health
+		this.hud.text2.text = "SHIELD: " + this.player.shield
 	}
 
 	// collectBullet(player, bullet) {
@@ -314,18 +321,41 @@ export class GameComponent extends Phaser.State {
 		this.map.addTilesetImage('tileset');
 		this.map.addTilesetImage('fundo');
 		this.map.addTilesetImage('porta');
+		this.map.addTilesetImage('shiny_rpg_potions_32x32');
 
+		// this.layer = this.map.createLayer("Camada de Tiles 3")
 		this.layer = this.map.createLayer("Camada de Tiles 2")
 		this.map.setCollisionBetween(4, 6, true, 0)
 		this.map.setCollisionBetween(12, 16, true, 0)
 		this.map.setCollisionBetween(12, 16, true, 0)
 		this.map.setCollisionBetween(20, 24, true, 0)
 		this.map.setCollisionBetween(28, 32, true, 0)
+		this.map.setTileIndexCallback(2,this.nextLevel,this)
+		this.map.setTileIndexCallback(70,this.catchPotion,this)
+		this.map.setTileIndexCallback(80,this.enemyAhead,this)
+		console.log(this.layer)
+		
+		this.layer.debug = true
+		
+
 
 		this.layer.resizeWorld()
 
 
 	}
+	nextLevel(){
+		console.log("passou de nível")
+	}
+	
+	catchPotion(){
+		console.log("passou de nível")		
+	}
+	
+	enemyAhead(){
+		console.log("inimigo")		
+	}
+	
+	
 
 	// createLayer() {
 	//   this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -355,4 +385,8 @@ export class GameComponent extends Phaser.State {
 		// console.log(this.inventory)
 
 	}
+}
+export class FightComponent extends Phaser.State {
+
+
 }
