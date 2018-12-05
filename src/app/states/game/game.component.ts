@@ -1,8 +1,8 @@
 import { Component, OnInit } from "@angular/core";
-import * as Phaser from "phaser-ce/build/custom/phaser-split";
-import { PathLocationStrategy } from "@angular/common";
+import * as Phaser from 'phaser-ce/build/custom/phaser-split';
+import { PathLocationStrategy } from '@angular/common';
 
-var temp;
+let temp;
 
 @Component({
 	selector: "app-game",
@@ -24,13 +24,15 @@ export class GameComponent extends Phaser.State {
 	layer: any;
 	layer2: any;
 	player: any;
-	potes:any;
+	potesVida: any;
+	potesEscudo: any;
 
 	hud: any;
 
 	playerX: any
 	playerY: any
-	vidaPlayer:any;
+	vidaPlayer: any;
+	shieldPlayer: any;
 
 	atualMap: any;
 
@@ -98,6 +100,8 @@ export class GameComponent extends Phaser.State {
 		this.game.load.image('fundo', 'assets/mapasNovos/fundo.png')
 		this.game.load.image('porta', 'assets/mapasNovos/porta.png')
 		this.game.load.image('shiny_rpg_potions_32x32', 'assets/tiles/shiny_rpg_potions_32x32.png')
+		this.game.load.image('poteDeVida', 'assets/tiles/poteVida.png')
+		this.game.load.image('poteDeEscudo', 'assets/tiles/poteShield.png')
 
 		this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -116,7 +120,7 @@ export class GameComponent extends Phaser.State {
 
 	openInventory() {
 		// console.log("Foi")
-		
+
 
 		// console.log('temp')
 		// console.log(temp)
@@ -145,6 +149,7 @@ export class GameComponent extends Phaser.State {
 		this.atualMap = dict.atualMap
 		this.atualMap = dict.level
 		this.vidaPlayer = dict.vida
+		this.shieldPlayer = dict.shield
 
 		// this.inimigos = dict.inimigos
 
@@ -190,7 +195,7 @@ export class GameComponent extends Phaser.State {
 		this.game.add.existing(this.player)
 		this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1); // smooth   
 		this.player.health = this.vidaPlayer
-		this.player.shield = 0
+		this.player.shield = this.shieldPlayer
 
 		this.a1 = new Enemy(this.game, this.playerX, this.playerY, 'shot')
 		this.a1.anchor
@@ -200,98 +205,11 @@ export class GameComponent extends Phaser.State {
 
 		this.updateHud()
 
-		// //  We're going to be using physics, so enable the Arcade Physics system
-		// this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-		// //  A simple background for our game
-		// this.game.add.sprite(0, 0, "sky");
-
-		// //  The platforms group contains the ground and the 2 ledges we can jump on
-		// this.platforms = this.game.add.group();
-
-		// //  We will enable physics for any object that is created in this group
-		// this.platforms.enableBody = true;
-
-		// // Here we create the ground.
-		// var ground = this.platforms.create(
-		//   0,
-		//   this.game.world.height - 64,
-		//   "ground"
-		// );
-
-		// //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-		// ground.scale.setTo(2, 2);
-
-		// //  This stops it from falling away when you jump on it
-		// ground.body.immovable = true;
-
-		// //  Now let's create two ledges
-		// var ledge = this.platforms.create(400, 400, "ground");
-
-		// ledge.body.immovable = true;
-
-		// ledge = this.platforms.create(-150, 250, "ground");
-
-		// ledge.body.immovable = true;
-
-		// this.player = this.game.add.sprite(
-		//   32,
-		//   this.game.world.height - 150,
-		//   "phaser"
-		// );
-
-		// //  We need to enable physics on the player
-		// this.game.physics.arcade.enable(this.player);
-
-		// //  Player physics properties. Give the little guy a slight bounce.
-		// this.player.body.bounce.y = 0.2;
-		// this.player.body.gravity.y = 300;
-		// this.player.body.collideWorldBounds = true;
-
-		// //  Our two animations, walking left and right.
-		// this.player.animations.add("left", [0, 1, 2, 3], 10, true);
-		// this.player.animations.add("right", [5, 6, 7, 8], 10, true);
-
-		// this.bullets = this.game.add.group();
-
-		// this.bullets.enableBody = true;
-
-		// //  Here we'll create 12 of them evenly spaced apart
-		// for (var i = 0; i < 12; i++) {
-		//   //  Create a star inside of the 'stars' group
-		//   var bullet = this.bullets.create(i * 70, 0, "bullet");
-
-		//   //  Let gravity do its thing
-		//   bullet.body.gravity.y = 6;
-
-		//   //  This just gives each star a slightly random bounce value
-		//   bullet.body.bounce.y = 0.7 + Math.random() * 0.2;
-		// }
-
-		// this.scoreText = this.game.add.text(16, 16, "Pontos: 0", {
-		//   fontSize: "32px",
-		//   fill: "#000"
-		// });
 
 	}
 
 	update() {
-		// this.game.physics.arcade.collide(this.bullets, this.platforms);
-
-		// this.game.physics.arcade.overlap(
-		//   this.player,
-		//   this.bullets,
-		//   this.collectBullet,
-		//   null,
-		//   this
-		// );
-
-		// var hitPlatform = this.game.physics.arcade.collide(
-		//   this.player,
-		//   this.platforms
-		// );
-
-
 
 		// //  Reset the players velocity (movement)
 		this.player.body.velocity.x = 0;
@@ -334,7 +252,8 @@ export class GameComponent extends Phaser.State {
 
 		this.game.physics.arcade.collide(this.player, this.layer);
 		this.game.physics.arcade.collide(this.player, this.inimigos, this.bateNoInimigo, null, this)
-		this.game.physics.arcade.collide(this.player, this.potes, this.catchPotion, null, this)
+		this.game.physics.arcade.collide(this.player, this.potesVida, this.catchPotion, null, this)
+		this.game.physics.arcade.collide(this.player, this.potesEscudo, this.catchPotion2, null, this)
 
 		// //  Allow the player to jump if they are touching the ground.
 		// if (
@@ -349,15 +268,21 @@ export class GameComponent extends Phaser.State {
 	}
 
 	bateNoInimigo(player, enemy) {
-		// console.log('player')
-		// console.log(player)
-		// console.log('enemy')
-		// console.log(enemy)
-		enemy.damage(1)
-		player.damage(0.5)
-		player.x = player.x - 50
-		console.log("inimigos")
+		let dano = 1
+		enemy.damage(4)
+		if (player.shield != 0) {
+			player.shield -= dano
+		} else {
+			player.damage(dano)
+		}
+		// player.x = player.x - 50
+		// console.log("inimigos")
 		// console.log(this.inimigos['children'])
+
+		this.game.camera.shake(0.01, 200);
+		let forceDirection = this.game.physics.arcade.angleBetween(enemy, player)
+        this.game.physics.arcade.velocityFromRotation(forceDirection, 20, player.velocity)
+        
 
 	}
 
@@ -404,25 +329,22 @@ export class GameComponent extends Phaser.State {
 		}
 		else if (this.atualMap == 'lv2') {
 			this.layer = this.map.createLayer("Camada de Tiles 2")
-			
+
 			this.map.setCollisionBetween(13, 15, true, 0)
 			this.map.setCollisionBetween(21, 25, true, 0)
 			this.map.setCollisionBetween(29, 33, true, 0)
 			this.map.setCollisionBetween(37, 41, true, 0)
 			this.map.setTileIndexCallback(11, this.nextLevel, this)
 			// this.map.setTileIndexCallback(70, this.catchPotion, this)
-			this.potes = this.game.add.group()
-			this.map.createFromTiles(70,null,'shiny_rpg_potions_32x32','Camada de Tiles 2',this.potes)
-			console.log('this.potes')
-			console.log(this.potes)
-			// this.map.setTileIndexCallback(80, this.enemyAhead, this)
-			// console.log(this.layer)
+			this.potesVida = this.game.add.group()
+			this.map.createFromObjects('Object Layer 1', 70, 'poteDeVida', 0, true, true, this.potesVida, Potions)
 
-			if (!this.inimigos) {
-				this.inimigos = this.game.add.group()
-				this.map.createFromObjects("Object Layer 1", 136, 'shiny_rpg_potions_32x32', 0, true, true, this.inimigos, Enemy)
+			this.potesEscudo = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 160, 'poteDeEscudo', 0, true, true, this.potesEscudo, Potions)
+			
+			this.inimigos = this.game.add.group();
+			this.map.createFromObjects("Object Layer 1", 109, 'shiny_rpg_potions_32x32', 35, true, true, this.inimigos, Enemy)
 
-			}
 		}
 
 		this.layer.debug = true
@@ -435,20 +357,22 @@ export class GameComponent extends Phaser.State {
 	}
 	nextLevel() {
 		console.log("passou de nível")
-		this.game.state.start("Game",true,false,
-			{x:194, y:138,level:'lv2', vida:this.player.health})
+		this.game.state.start("Game", true, false,
+			{ x: 194, y: 138, level: 'lv2', vida: this.player.health, shield: this.player.shield })
 	}
 
 	catchPotion(player, potion) {
 		this.player.health += 1
-		// this.map.swap(27,70)
 		potion.kill()
-		console.log(player)
-		console.log(potion)
+	}
+
+	catchPotion2(player, potion) {
+		this.player.shield += 1
+		potion.kill()
+		console.log("inimigo")
 	}
 
 	enemyAhead() {
-		console.log("inimigo")
 	}
 
 
@@ -490,13 +414,23 @@ export class Enemy extends Phaser.Sprite {
 	constructor(game, x, y, img) {
 		super(game, x, y, img)
 		game.physics.arcade.enable(this)
-		console.log('dasdasdas')
+		this.health = 10
+		this.body.immovable = true
+		this.anchor.setTo(0.5, 0.5)
+	}
+}
+
+export class Potions extends Phaser.Sprite {
+	health: any;
+	body: any;
+	anchor: any;
+	constructor(game, x, y, img) {
+		super(game, x, y, img)
+		game.physics.arcade.enable(this)
 		this.health = 1
 		this.body.immovable = true
 		this.anchor.setTo(0.5, 0.5)
 	}
-
-
 }
 
 
@@ -511,14 +445,11 @@ export class FightComponent extends Phaser.State {
 
 
 	init(dict) {
-		// console.log('init')
-		// console.log(dict.x)
-		// console.log(dict.y)
 		this.x = dict.x
 		this.y = dict.y
 		this.inimigosMain = dict.inimigos
-		console.log("this.inimigosMain")
-		console.log(dict)
+		this.inimigosMain = dict.inimigos
+
 	}
 
 
