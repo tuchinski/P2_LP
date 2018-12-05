@@ -15,8 +15,14 @@ export class GameComponent extends Phaser.State {
 	bmdSprite: Phaser.Sprite;
 	manager: any;
 
+	nameLevel: any;
+
 	a1: any;
-	inimigos: any;
+	inimigosZombie: any;
+	inimigosPedra: any;
+	inimigosGoblin: any;
+	inimigosDevil: any;
+	key: any;
 
 	it: number = 1;
 	platforms: any;
@@ -26,6 +32,9 @@ export class GameComponent extends Phaser.State {
 	player: any;
 	potesVida: any;
 	potesEscudo: any;
+	potesAttack: any;
+
+	textoAtaque: any;
 
 	hud: any;
 
@@ -33,6 +42,7 @@ export class GameComponent extends Phaser.State {
 	playerY: any
 	vidaPlayer: any;
 	shieldPlayer: any;
+	attackPlayer: any;
 
 	atualMap: any;
 
@@ -83,6 +93,15 @@ export class GameComponent extends Phaser.State {
 			Phaser.Tilemap.TILED_JSON
 		);
 
+		this.game.load.tilemap(
+			'lv3',
+			'assets/mapasNovos/mapaLv3.json',
+			null,
+			Phaser.Tilemap.TILED_JSON
+		);
+
+		this.nameLevel = ['lv1', 'lv2', 'lv3']
+
 		// this.game.load.image("tiles", "assets/tiles/world_2.png");
 
 		this.game.load.spritesheet("phaser", "assets/sprites/phaser-dude.png");
@@ -102,6 +121,14 @@ export class GameComponent extends Phaser.State {
 		this.game.load.image('shiny_rpg_potions_32x32', 'assets/tiles/shiny_rpg_potions_32x32.png')
 		this.game.load.image('poteDeVida', 'assets/tiles/poteVida.png')
 		this.game.load.image('poteDeEscudo', 'assets/tiles/poteShield.png')
+		this.game.load.image('poteDeAtaque', 'assets/tiles/poteAtaque.png')
+		this.game.load.image('pedra', 'assets/tiles/bixodepredra.png')
+		this.game.load.image('devil', 'assets/tiles/devil.png')
+		this.game.load.image('goblin', 'assets/tiles/goblin.png')
+		this.game.load.image('key', 'assets/tiles/key.png')
+
+		this.game.load.image('zombie', 'assets/sprites/zombie/female/Idle (1).png')
+
 
 		this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -150,6 +177,7 @@ export class GameComponent extends Phaser.State {
 		this.atualMap = dict.level
 		this.vidaPlayer = dict.vida
 		this.shieldPlayer = dict.shield
+		this.attackPlayer = dict.attack
 
 		// this.inimigos = dict.inimigos
 
@@ -158,17 +186,18 @@ export class GameComponent extends Phaser.State {
 
 	create() {
 		console.log("antes")
-		console.log(this.inimigos)
+		console.log(this.inimigosZombie)
 
 		this.createTileMap();
 
 		console.log("depois")
-		console.log(this.inimigos)
+		console.log(this.inimigosZombie)
 
 
 		this.hud = {
 			text1: this.createText(this.game.width * 1 / 9, 50, 'HEALTH: 20'),
-			text2: this.createText(this.game.width * 1 / 9, 80, 'SHIELS: 0')
+			text2: this.createText(this.game.width * 1 / 9, 80, 'SHIELD: 0'),
+			text3: this.createText(this.game.width * 1 / 9, 110, 'ATTACK: 0')
 			//fps: createHealthText(game.width*6/9, 50, 'FPS'),
 		}
 
@@ -196,6 +225,10 @@ export class GameComponent extends Phaser.State {
 		this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1); // smooth   
 		this.player.health = this.vidaPlayer
 		this.player.shield = this.shieldPlayer
+		this.player.body.bounce.y = 0.2
+		this.player.body.bounce.x = 0.2
+		this.player.attack = this.attackPlayer
+		this.player.hasKey = false
 
 		this.a1 = new Enemy(this.game, this.playerX, this.playerY, 'shot')
 		this.a1.anchor
@@ -251,44 +284,76 @@ export class GameComponent extends Phaser.State {
 		}
 
 		this.game.physics.arcade.collide(this.player, this.layer);
-		this.game.physics.arcade.collide(this.player, this.inimigos, this.bateNoInimigo, null, this)
+		this.game.physics.arcade.collide(this.player, this.inimigosZombie, this.bateNoInimigo, null, this)
+		this.game.physics.arcade.collide(this.player, this.inimigosPedra, this.bateNoInimigo, null, this)
 		this.game.physics.arcade.collide(this.player, this.potesVida, this.catchPotion, null, this)
-		this.game.physics.arcade.collide(this.player, this.potesEscudo, this.catchPotion2, null, this)
-
-		// //  Allow the player to jump if they are touching the ground.
-		// if (
-		//   this.cursors.up.isDown &&
-		//   this.player.body.touching.down &&
-		//   hitPlatform
-		// ) {
-		//   this.player.body.velocity.y = -350;
-		// }
+		this.game.physics.arcade.collide(this.player, this.potesEscudo, this.catchPotion, null, this)
+		this.game.physics.arcade.collide(this.player, this.potesAttack, this.catchPotion, null, this)
+		this.game.physics.arcade.collide(this.player, this.key, this.catchKey, null, this)
 
 		this.updateHud()
+		this.verifyGameOver()
+	}
+
+	verifyGameOver() {
+		if (!this.player.alive) {
+			this.game.state.start("GameOver", true, true)
+		}
 	}
 
 	bateNoInimigo(player, enemy) {
-		let dano = 1
-		enemy.damage(4)
-		if (player.shield != 0) {
-			player.shield -= dano
-		} else {
-			player.damage(dano)
+		var dano
+
+		if (enemy.key == 'zombie') {
+			dano = 2
+			console.log("zumbiiiiiiiiii")
+			console.log(enemy.health)
+		} else if (enemy.key == "pedra") {
+			console.log("predraaaaaaaaaaaaaaaa")
+			console.log(enemy.health)
+			dano = 2
 		}
-		// player.x = player.x - 50
-		// console.log("inimigos")
-		// console.log(this.inimigos['children'])
+		enemy.damage(player.attack)
+
+		for (var _i = 0; _i < dano; _i++) {
+			if (player.shield > 0) {
+				player.shield -= 1
+			} else {
+				player.damage(1)
+			}
+		}
 
 		this.game.camera.shake(0.01, 200);
-		let forceDirection = this.game.physics.arcade.angleBetween(enemy, player)
-        this.game.physics.arcade.velocityFromRotation(forceDirection, 20, player.velocity)
-        
 
+		if(player.body.prev.x<player.body.position.x){
+			player.x -= 10
+		}else if(player.body.prev.x > player.body.position.x){
+			player.x += 10
+		}else if(player.body.prev.y<player.body.position.y){
+			player.y -= 10
+		}
+		else if(player.body.prev.y>player.body.position.y){
+			player.y += 10
+		}
+
+		// this.textoAtaque = this.createText(player.body.x, player.body.y,"coisa",10)
+		// var tempo = this.game.time.create(false)
+		// tempo.add(Phaser.Timer.SECOND,this.mataTexto,this.game)
+		// tempo.start()
+
+		// this.textoAtaque.kill()
 	}
 
+
+	// mataTexto(){
+	// 	console.log(this.textoAtaque)
+	// 	this.textoAtaque.kill()
+	// }
+	
 	updateHud() {
 		this.hud.text1.text = "HEALTH: " + this.player.health
 		this.hud.text2.text = "SHIELD: " + this.player.shield
+		this.hud.text3.text = "ATTACK: " + this.player.attack
 	}
 
 	// collectBullet(player, bullet) {
@@ -301,15 +366,19 @@ export class GameComponent extends Phaser.State {
 		this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
 		// this.map = this.game.add.tilemap('mundo');
-		this.map = this.game.add.tilemap(this.atualMap);
+		// console.log("mapaaaaaaaaaa")
+		console.log(this.nameLevel[this.atualMap])
+		this.map = this.game.add.tilemap(this.nameLevel[this.atualMap]);
 
 		this.map.addTilesetImage('tileset');
 		this.map.addTilesetImage('fundo');
 		this.map.addTilesetImage('porta');
 		this.map.addTilesetImage('shiny_rpg_potions_32x32');
 
+
+
 		// this.layer = this.map.createLayer("Camada de Tiles 3")
-		if (this.atualMap == 'lv1') {
+		if (this.nameLevel[this.atualMap] == 'lv1') {
 			this.layer = this.map.createLayer("Camada de Tiles 2")
 			this.map.setCollisionBetween(4, 6, true, 0)
 			this.map.setCollisionBetween(12, 16, true, 0)
@@ -321,13 +390,14 @@ export class GameComponent extends Phaser.State {
 			this.map.setTileIndexCallback(80, this.enemyAhead, this)
 			// console.log(this.layer)
 
-			if (!this.inimigos) {
-				this.inimigos = this.game.add.group()
-				this.map.createFromObjects("Object Layer 1", 136, 'shiny_rpg_potions_32x32', 0, true, true, this.inimigos, Enemy)
+			if (!this.inimigosZombie) {
+				this.inimigosZombie = this.game.add.group()
+				this.map.createFromObjects("Object Layer 1", 136, 'zombie', 0, true, true, this.inimigosZombie, Enemy)
 
 			}
 		}
-		else if (this.atualMap == 'lv2') {
+		else if (this.nameLevel[this.atualMap] == 'lv2') {
+			console.log("entrei no lv2")
 			this.layer = this.map.createLayer("Camada de Tiles 2")
 
 			this.map.setCollisionBetween(13, 15, true, 0)
@@ -341,13 +411,51 @@ export class GameComponent extends Phaser.State {
 
 			this.potesEscudo = this.game.add.group();
 			this.map.createFromObjects('Object Layer 1', 160, 'poteDeEscudo', 0, true, true, this.potesEscudo, Potions)
-			
-			this.inimigos = this.game.add.group();
-			this.map.createFromObjects("Object Layer 1", 109, 'shiny_rpg_potions_32x32', 35, true, true, this.inimigos, Enemy)
+
+			this.potesAttack = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 120, 'poteDeAtaque', 0, true, true, this.potesAttack, Potions)
+
+
+			this.inimigosZombie = this.game.add.group();
+			this.map.createFromObjects("Object Layer 1", 109, 'zombie', 0, true, true, this.inimigosZombie, Enemy)
+			this.inimigosZombie.forEach(function (a) {
+				a.health = 1
+			})
+
+			this.key = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 165, 'key', 0, true, true, this.key, Potions)
+
+			this.inimigosPedra = this.game.add.group()
+			this.map.createFromObjects("Object Layer 1", 140, 'pedra', 0, true, true, this.inimigosPedra, Enemy)
+			this.inimigosPedra.forEach(function (a) {
+				a.health = 5
+			})
+
 
 		}
 
-		this.layer.debug = true
+		else if (this.nameLevel[this.atualMap] == 'lv3') {
+			this.layer = this.map.createLayer("Camada de Tiles 2")
+
+			this.map.setCollisionBetween(4, 6, true, 0)
+			this.map.setCollisionBetween(12, 16, true, 0)
+			this.map.setCollisionBetween(12, 16, true, 0)
+			this.map.setCollisionBetween(20, 24, true, 0)
+			this.map.setCollisionBetween(28, 32, true, 0)
+			this.map.setTileIndexCallback(11, this.nextLevel, this)
+			// this.map.setTileIndexCallback(70, this.catchPotion, this)
+			this.potesVida = this.game.add.group()
+			this.map.createFromObjects('Object Layer 1', 70, 'poteDeVida', 0, true, true, this.potesVida, Potions)
+
+			this.potesEscudo = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 160, 'poteDeEscudo', 0, true, true, this.potesEscudo, Potions)
+
+			this.inimigosZombie = this.game.add.group();
+			this.map.createFromObjects("Object Layer 1", 109, 'zombie', 35, true, true, this.inimigosZombie, Enemy)
+
+		}
+
+		// this.layer.debug = true
 
 
 
@@ -356,20 +464,39 @@ export class GameComponent extends Phaser.State {
 
 	}
 	nextLevel() {
-		console.log("passou de nível")
-		this.game.state.start("Game", true, false,
-			{ x: 194, y: 138, level: 'lv2', vida: this.player.health, shield: this.player.shield })
+		if (this.player.hasKey) {
+			console.log("passou de nível")
+			if (this.nameLevel[this.atualMap] == 'lv1') {
+				this.game.state.start("Game", true, false,
+					{ x: 154, y: 62, level: 1, vida: this.player.health, shield: this.player.shield, attack: this.player.attack })
+			} else if (this.nameLevel[this.atualMap] == 'lv2') {
+				this.game.state.start("Game", true, false,
+					{ x: 2907, y: 861, level: 2, vida: this.player.health, shield: this.player.shield, attack: this.player.attack })
+			}
+		} else {
+			this.player.x = this.playerX
+			this.player.y = this.playerY
+		}
 	}
 
 	catchPotion(player, potion) {
-		this.player.health += 1
-		potion.kill()
+		if (potion.key == 'poteDeVida') {
+			this.player.health += 1
+			potion.kill()
+		} else if (potion.key == 'poteDeEscudo') {
+			this.player.shield += 1
+			potion.kill()
+			console.log("inimigo")
+		} else if (potion.key == 'poteDeAtaque') {
+			this.player.attack += 1
+			potion.kill()
+		}
 	}
 
-	catchPotion2(player, potion) {
-		this.player.shield += 1
-		potion.kill()
-		console.log("inimigo")
+	catchKey(player, key) {
+		player.hasKey = true
+		key.kill()
+
 	}
 
 	enemyAhead() {
@@ -430,6 +557,50 @@ export class Potions extends Phaser.Sprite {
 		this.health = 1
 		this.body.immovable = true
 		this.anchor.setTo(0.5, 0.5)
+	}
+}
+
+export class GameOverComponent extends Phaser.State {
+	game: any;
+	hud: any;
+
+	createText(x, y, string, size = 16) {
+		let style = { font: `bold ${size}px Arial`, fill: 'white' }
+		let text = this.game.add.text(x, y, string, style)
+		//text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+		text.stroke = '#000000';
+		text.strokeThickness = 2;
+		text.anchor.setTo(0.5, 0.5)
+		text.fixedToCamera = true
+		return text
+	}
+
+	create() {
+		this.hud = {
+			text1: this.createText(this.game.width * 1 / 2, 100, 'GAME OVER')
+		}
+	}
+}
+
+export class WinComponent extends Phaser.State {
+	game: any;
+	hud: any;
+
+	createText(x, y, string, size = 16) {
+		let style = { font: `bold ${size}px Arial`, fill: 'white' }
+		let text = this.game.add.text(x, y, string, style)
+		//text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+		text.stroke = '#000000';
+		text.strokeThickness = 2;
+		text.anchor.setTo(0.5, 0.5)
+		text.fixedToCamera = true
+		return text
+	}
+
+	create() {
+		this.hud = {
+			text1: this.createText(this.game.width * 1 / 2, 100, 'GAME OVER')
+		}
 	}
 }
 
