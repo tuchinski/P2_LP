@@ -36,6 +36,8 @@ export class GameComponent extends Phaser.State {
 
 	textoAtaque: any;
 
+	sfx:any;
+	som:any;
 	hud: any;
 
 	playerX: any
@@ -127,6 +129,9 @@ export class GameComponent extends Phaser.State {
 		this.game.load.image('goblin', 'assets/tiles/goblin.png')
 		this.game.load.image('key', 'assets/tiles/key.png')
 
+		this.game.load.audio('sfx:hit','assets/sounds/hit12.m4a')
+		this.game.load.audio('sfx:background','assets/sounds/background.mp3')
+
 		this.game.load.image('zombie', 'assets/sprites/zombie/female/Idle (1).png')
 
 
@@ -187,6 +192,14 @@ export class GameComponent extends Phaser.State {
 	create() {
 		console.log("antes")
 		console.log(this.inimigosZombie)
+
+		this.sfx = {
+			hit:this.game.add.audio('sfx:hit'),
+			background:this.game.add.audio('sfx:background')
+		}
+		
+		this.sfx.background.loop = true
+		this.sfx.background.play()
 
 		this.createTileMap();
 
@@ -303,13 +316,12 @@ export class GameComponent extends Phaser.State {
 
 	bateNoInimigo(player, enemy) {
 		var dano
+		this.sfx.hit.play()
 
 		if (enemy.key == 'zombie') {
 			dano = 2
-			console.log("zumbiiiiiiiiii")
 			console.log(enemy.health)
 		} else if (enemy.key == "pedra") {
-			console.log("predraaaaaaaaaaaaaaaa")
 			console.log(enemy.health)
 			dano = 2
 		}
@@ -445,13 +457,29 @@ export class GameComponent extends Phaser.State {
 			this.map.setTileIndexCallback(11, this.nextLevel, this)
 			// this.map.setTileIndexCallback(70, this.catchPotion, this)
 			this.potesVida = this.game.add.group()
-			this.map.createFromObjects('Object Layer 1', 70, 'poteDeVida', 0, true, true, this.potesVida, Potions)
+			this.map.createFromObjects('Object Layer 1', 69, 'poteDeVida', 0, true, true, this.potesVida, Potions)
 
 			this.potesEscudo = this.game.add.group();
 			this.map.createFromObjects('Object Layer 1', 160, 'poteDeEscudo', 0, true, true, this.potesEscudo, Potions)
 
 			this.inimigosZombie = this.game.add.group();
-			this.map.createFromObjects("Object Layer 1", 109, 'zombie', 35, true, true, this.inimigosZombie, Enemy)
+			this.map.createFromObjects("Object Layer 1", 108, 'zombie', 35, true, true, this.inimigosZombie, Enemy)
+
+			this.inimigosZombie.forEach(function (a) {
+				a.health = 1
+			})
+
+			this.key = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 164, 'key', 0, true, true, this.key, Potions)
+
+			this.inimigosPedra = this.game.add.group()
+			this.map.createFromObjects("Object Layer 1", 139, 'pedra', 0, true, true, this.inimigosPedra, Enemy)
+			this.inimigosPedra.forEach(function (a) {
+				a.health = 5
+			})
+
+			this.potesAttack = this.game.add.group();
+			this.map.createFromObjects('Object Layer 1', 119, 'poteDeAtaque', 0, true, true, this.potesAttack, Potions)
 
 		}
 
@@ -563,6 +591,7 @@ export class Potions extends Phaser.Sprite {
 export class GameOverComponent extends Phaser.State {
 	game: any;
 	hud: any;
+	sfx: any;
 
 	createText(x, y, string, size = 16) {
 		let style = { font: `bold ${size}px Arial`, fill: 'white' }
@@ -574,11 +603,19 @@ export class GameOverComponent extends Phaser.State {
 		text.fixedToCamera = true
 		return text
 	}
+	preload(){
+		this.game.load.audio('sfx:gameOver','assets/sounds/gameover.mp3')
+	}
 
 	create() {
 		this.hud = {
 			text1: this.createText(this.game.width * 1 / 2, 100, 'GAME OVER')
 		}
+
+		this.sfx = {
+			gameOver:this.game.add.audio('sfx:gameOver')
+		}
+		this.sfx.gameOver.play()
 	}
 }
 

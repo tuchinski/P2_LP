@@ -19,6 +19,7 @@ export class PreloadComponent extends Phaser.State {
     this.setScale();
 
     this.game.state.start("Boot");
+    // this.game.state.start("Game");
   }
 
   initStates() {
